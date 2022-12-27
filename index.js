@@ -20,6 +20,7 @@ const client = new MongoClient(uri, {
 async function run() {
   const userCollection = client.db("Trending-com").collection("users");
   const postCollection = client.db("Trending-com").collection("posts");
+  const loveCollection = client.db("Trending-com").collection("love");
   try {
     //insert userinfo into the database
     app.post("/storeUser", async (req, res) => {
@@ -37,6 +38,24 @@ async function run() {
       const result = await userCollection.updateOne(filter, updateDoc, options);
       res.send(result);
     });
+
+    //insert user's love into the database
+    app.post("/love", async (req, res) => {
+      const loveInfo = req.body;
+      const query = {
+        previous_id: loveInfo.previous_id,
+        love_giver_email: loveInfo.love_giver_email,
+      };
+      const result = await loveCollection.findOne(query);
+      if (result) {
+        const deleteLove = await loveCollection.deleteOne(query);
+        res.send({ acknowledged: false });
+      } else {
+        const result1 = await loveCollection.insertOne(loveInfo);
+        res.send(result1);
+      }
+    });
+
     //insert user post
     app.post("/post", async (req, res) => {
       const post = req.body;
@@ -55,7 +74,7 @@ async function run() {
     //get specific post
     app.get("/media/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: ObjectId(id)};
+      const query = { _id: ObjectId(id) };
       const result = await postCollection.findOne(query);
       res.send(result);
     });
