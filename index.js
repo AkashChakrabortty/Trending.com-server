@@ -21,6 +21,7 @@ async function run() {
   const userCollection = client.db("Trending-com").collection("users");
   const postCollection = client.db("Trending-com").collection("posts");
   const loveCollection = client.db("Trending-com").collection("love");
+  const commentCollection = client.db("Trending-com").collection("comment");
   try {
     //insert userinfo into the database
     app.post("/storeUser", async (req, res) => {
@@ -54,6 +55,13 @@ async function run() {
         const result1 = await loveCollection.insertOne(loveInfo);
         res.send(result1);
       }
+    });
+
+    //insert user comment
+    app.post("/comment", async (req, res) => {
+      const comment = req.body;
+      const result = await commentCollection.insertOne(comment);
+      res.send(result);
     });
 
     //insert user post
