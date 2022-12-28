@@ -87,23 +87,29 @@ async function run() {
       res.send(result);
     });
 
-    //edit info
-    app.patch("/edit", async (req, res) => {
-     const editInfo = req.body;
-     const filter = { email: editInfo.previous_email };
-     const options = { upsert: true };
-     const updateDoc = {
-       $set: {
-         name: editInfo.name,
-         university: editInfo.university,
-         address: editInfo.address
-       },
-     };
-     const result = await userCollection.updateOne(filter, updateDoc, options);
-     res.send(result);
+    //get user about
+    app.get("/about/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
+      res.send(result);
     });
 
-
+    //edit info
+    app.patch("/edit", async (req, res) => {
+      const editInfo = req.body;
+      const filter = { email: editInfo.previous_email };
+      const options = { upsert: true };
+      const updateDoc = {
+        $set: {
+          name: editInfo.name,
+          university: editInfo.university,
+          address: editInfo.address,
+        },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result);
+    });
   } catch {}
 }
 run().catch((err) => console.log(err));
