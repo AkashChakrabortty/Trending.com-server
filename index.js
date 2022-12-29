@@ -49,9 +49,43 @@ async function run() {
       };
       const result = await loveCollection.findOne(query);
       if (result) {
+
+        const query = {
+          _id: ObjectId(loveInfo.previous_id)
+        };
+       const postObj = await postCollection.findOne(query);
+       let totalLoves;
+       if(postObj.totalLoves>0){
+         totalLoves = postObj.totalLoves - 1;
+       }
+       else if (postObj.totalLoves===0) {
+          totalLoves = 0;
+       }
+     
+        const updateDoc = {
+          $set: {
+            totalLoves,
+          },
+        };
+        const incrementLoves = await postCollection.updateOne(query,updateDoc)
         const deleteLove = await loveCollection.deleteOne(query);
         res.send({ acknowledged: false });
       } else {
+         const query = {
+           _id: ObjectId(loveInfo.previous_id),
+         };
+         const postObj = await postCollection.findOne(query);
+
+         const totalLoves = postObj.totalLoves + 1;
+         const updateDoc = {
+           $set: {
+             totalLoves,
+           },
+         };
+         const incrementLoves = await postCollection.updateOne(
+           query,
+           updateDoc
+         );
         const result1 = await loveCollection.insertOne(loveInfo);
         res.send(result1);
       }
@@ -90,11 +124,38 @@ async function run() {
     //get specific post's comments
     app.get("/comments/:id", async (req, res) => {
       const id = req.params.id;
-      const query = { previous_id: (id) };
+      const query = { previous_id: id };
       const cursor = commentCollection.find(query);
       const result = await cursor.toArray();
-       res.send(result);
+      res.send(result);
     });
+    //get specific post's total loves
+    app.get("/totalLoves/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { previous_id: id };
+      const cursor = loveCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
+    //get top 3 trending post depend on highest love
+    app.get("/trendingPosts", async (req, res) => {
+      
+       const query = {  };
+       const cursor = postCollection.find(query);
+       const result = await cursor.toArray();
+       result
+         .sort(function (a, b) {
+           return b.totalLoves - a.totalLoves;
+         })
+         .length=3;
+       res.send(result);
+
+       
+    });
+  
+    // res.send(result);
+    // });
 
     //get user about
     app.get("/about/:email", async (req, res) => {
